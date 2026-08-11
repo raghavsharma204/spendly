@@ -19,6 +19,7 @@
         <div class="hero-actions">
             <a href="{{ url_for('register') }}" class="btn-primary">Start tracking free</a>
             <a href="{{ url_for('login') }}" class="btn-ghost">Sign in</a>
+            <a href="#" id="hiw-open-btn" class="btn-ghost">How it works</a>
         </div>
     </div>
     <div class="hero-visual">
@@ -89,4 +90,107 @@
     </div>
 </section>
 
+<div id="hiw-modal-overlay" class="hiw-modal-overlay">
+    <div class="hiw-modal-content">
+        <button type="button" id="hiw-close-btn" class="hiw-close-btn" aria-label="Close">&times;</button>
+        <div class="hiw-video-wrap">
+            <iframe
+                id="hiw-video-iframe"
+                data-src="https://www.youtube.com/embed/M7lc1UVf-VE?autoplay=1"
+                title="How it works"
+                frameborder="0"
+                allow="autoplay; encrypted-media"
+                allowfullscreen>
+            </iframe>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block head %}
+<style>
+    .hiw-modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 15, 15, 0.75);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+    }
+
+    .hiw-modal-overlay.hiw-open {
+        display: flex;
+    }
+
+    .hiw-modal-content {
+        position: relative;
+        width: 100%;
+        max-width: 800px;
+    }
+
+    .hiw-video-wrap {
+        position: relative;
+        width: 100%;
+        padding-top: 56.25%;
+        background: #000;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .hiw-video-wrap iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: 0;
+    }
+
+    .hiw-close-btn {
+        position: absolute;
+        top: -2.5rem;
+        right: 0;
+        background: transparent;
+        border: none;
+        color: #fff;
+        font-size: 2rem;
+        line-height: 1;
+        cursor: pointer;
+        padding: 0.25rem 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    (function () {
+        var overlay = document.getElementById('hiw-modal-overlay');
+        var openBtn = document.getElementById('hiw-open-btn');
+        var closeBtn = document.getElementById('hiw-close-btn');
+        var iframe = document.getElementById('hiw-video-iframe');
+        var videoSrc = iframe.getAttribute('data-src');
+
+        function openModal(e) {
+            e.preventDefault();
+            iframe.src = videoSrc;
+            overlay.classList.add('hiw-open');
+        }
+
+        function closeModal() {
+            overlay.classList.remove('hiw-open');
+            iframe.src = '';
+        }
+
+        openBtn.addEventListener('click', openModal);
+        closeBtn.addEventListener('click', closeModal);
+        overlay.addEventListener('click', function (e) {
+            if (e.target === overlay) {
+                closeModal();
+            }
+        });
+    })();
+</script>
 {% endblock %}
