@@ -1,3 +1,5 @@
+from datetime import date
+
 from flask import Flask, render_template
 
 app = Flask(__name__)
@@ -10,6 +12,16 @@ app = Flask(__name__)
 @app.route("/")
 def landing():
     return render_template("landing.html")
+
+
+@app.route("/terms")
+def terms():
+    return render_template("terms.html", last_updated=date.today().strftime("%B %d, %Y"))
+
+
+@app.route("/privacy")
+def privacy():
+    return render_template("privacy.html", last_updated=date.today().strftime("%B %d, %Y"))
 
 
 @app.route("/register")
