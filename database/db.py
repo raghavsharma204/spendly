@@ -90,3 +90,28 @@ def seed_db():
 def _day_in_current_month(base_date, day):
     """Return an ISO date string (YYYY-MM-DD) for `day` in the same month/year as base_date."""
     return base_date.replace(day=day).isoformat()
+
+
+def create_user(name, email, password):
+    """Insert a new user with a hashed password. Returns the new user id, or None if the email is already taken."""
+    name = name.strip()
+    email = email.strip().lower()
+
+    conn = get_db()
+    try:
+        existing = conn.execute("SELECT id FROM users WHERE email = ?", (email,)).fetchone()
+        if existing:
+            return None
+
+        password_hash = generate_password_hash(password, method="pbkdf2:sha256")
+        try:
+            cursor = conn.execute(
+                "INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)",
+                (name, email, password_hash),
+            )
+            conn.commit()
+            return cursor.lastrowid
+        except sqlite3.IntegrityError:
+            return None
+    finally:
+        conn.close()
