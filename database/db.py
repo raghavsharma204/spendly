@@ -2,7 +2,7 @@ import os
 import sqlite3
 from datetime import date
 
-from werkzeug.security import generate_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 
 # database/db.py -> database/ -> repo root
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -113,5 +113,23 @@ def create_user(name, email, password):
             return cursor.lastrowid
         except sqlite3.IntegrityError:
             return None
+    finally:
+        conn.close()
+
+
+def authenticate_user(email, password):
+    """Verify email/password against the users table. Returns the user row on success, None otherwise."""
+    email = email.strip().lower()
+
+    conn = get_db()
+    try:
+        user = conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+        if user is None:
+            return None
+
+        if not check_password_hash(user["password_hash"], password):
+            return None
+
+        return user
     finally:
         conn.close()
