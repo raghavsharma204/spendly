@@ -133,3 +133,43 @@ def authenticate_user(email, password):
         return user
     finally:
         conn.close()
+
+
+def get_user_by_id(user_id):
+    """Fetch a single user by id. Returns the row, or None if not found."""
+    conn = get_db()
+    try:
+        return conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+    finally:
+        conn.close()
+
+
+def get_expense_summary(user_id):
+    """Return the all-time total spend and a per-category breakdown for a user."""
+    conn = get_db()
+    try:
+        rows = conn.execute(
+            "SELECT category, SUM(amount) AS total FROM expenses WHERE user_id = ? GROUP BY category",
+            (user_id,),
+        ).fetchall()
+    finally:
+        conn.close()
+
+    by_category = {row["category"]: row["total"] for row in rows}
+    total = sum(by_category.values())
+    max_category_total = max(by_category.values()) if by_category else 0
+
+    breakdown = []
+    for category in CATEGORIES:
+        if category not in by_category:
+            continue
+        cat_total = by_category[category]
+        pct = round((cat_total / max_category_total) * 100) if max_category_total else 0
+        breakdown.append({
+            "category": category,
+            "total": cat_total,
+            "pct": pct,
+            "variant": CATEGORIES.index(category) + 1,
+        })
+
+    return {"total": total, "breakdown": breakdown}
