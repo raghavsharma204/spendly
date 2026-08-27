@@ -1,12 +1,30 @@
 import os
-from datetime import date
+from datetime import date, datetime
 
 from flask import Flask, flash, redirect, render_template, request, session, url_for
 
-from database.db import authenticate_user, create_user, get_db, init_db, seed_db
+from database.db import (
+    authenticate_user,
+    create_user,
+    get_db,
+    get_expense_summary,
+    get_user_by_id,
+    init_db,
+    seed_db,
+)
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
+
+
+# ------------------------------------------------------------------ #
+# Template filters                                                    #
+# ------------------------------------------------------------------ #
+
+@app.template_filter("currency")
+def format_currency(value):
+    """Format a number as a rupee currency string, e.g. 1234.5 -> '₹1,234.50'."""
+    return f"₹{value:,.2f}"
 
 
 # ------------------------------------------------------------------ #
@@ -83,14 +101,26 @@ def logout():
     return redirect(url_for("login"))
 
 
+@app.route("/profile")
+def profile():
+    user_id = session.get("user_id")
+    if not user_id:
+        return redirect(url_for("login"))
+
+    user = get_user_by_id(user_id)
+    if user is None:
+        session.clear()
+        return redirect(url_for("login"))
+
+    summary = get_expense_summary(user_id)
+    member_since = datetime.strptime(user["created_at"][:10], "%Y-%m-%d").strftime("%B %d, %Y")
+
+    return render_template("profile.html", user=user, summary=summary, member_since=member_since)
+
+
 # ------------------------------------------------------------------ #
 # Placeholder routes — students will implement these                  #
 # ------------------------------------------------------------------ #
-
-@app.route("/profile")
-def profile():
-    return "Profile page — coming in Step 4"
-
 
 @app.route("/expenses/add")
 def add_expense():

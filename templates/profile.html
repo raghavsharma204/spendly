@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Your Profile — Spendly{% endblock %}
+
+{% block content %}
+
+<section class="profile-section">
+    <div class="profile-inner">
+
+        <div class="profile-header">
+            <h1 class="profile-title">Your account</h1>
+            <p class="profile-subtitle">Account details and your all-time spending snapshot</p>
+        </div>
+
+        <div class="profile-grid">
+
+            <div class="auth-card profile-account-card">
+                <h2 class="profile-card-title">Account info</h2>
+                <dl class="profile-info-list">
+                    <div class="profile-info-row">
+                        <dt>Name</dt>
+                        <dd>{{ user.name }}</dd>
+                    </div>
+                    <div class="profile-info-row">
+                        <dt>Email</dt>
+                        <dd>{{ user.email }}</dd>
+                    </div>
+                    <div class="profile-info-row">
+                        <dt>Member since</dt>
+                        <dd>{{ member_since }}</dd>
+                    </div>
+                </dl>
+            </div>
+
+            <div class="mock-card profile-summary-card">
+                <div class="mock-card-header">
+                    <span class="mock-label">All-time spend</span>
+                    <span class="mock-total">{{ summary.total | currency }}</span>
+                </div>
+
+                {% if summary.breakdown %}
+                <div class="mock-bars">
+                    {% for row in summary.breakdown %}
+                    <div class="mock-bar-row">
+                        <span class="mock-cat">{{ row.category }}</span>
+                        <div class="mock-bar-track">
+                            <div class="mock-bar{% if row.variant > 1 %} mock-bar-{{ row.variant }}{% endif %}"
+                                 style="width: {{ row.pct }}%"></div>
+                        </div>
+                        <span class="mock-amt">{{ row.total | currency }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="profile-empty">No expenses recorded yet.</p>
+                {% endif %}
+            </div>
+
+        </div>
+
+    </div>
+</section>
+
+{% endblock %}
