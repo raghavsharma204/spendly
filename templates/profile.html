@@ -53,15 +53,15 @@
                 </dl>
             </div>
 
-            <div class="mock-card profile-summary-card">
+            {# Step 05: category breakdown start #}
+            <div class="mock-card profile-breakdown-card">
                 <div class="mock-card-header">
-                    <span class="mock-label">All-time spend</span>
-                    <span class="mock-total">{{ summary.total | currency }}</span>
+                    <span class="mock-label">Spending by category</span>
                 </div>
 
-                {% if summary.breakdown %}
+                {% if category_breakdown %}
                 <div class="mock-bars">
-                    {% for row in summary.breakdown %}
+                    {% for row in category_breakdown %}
                     <div class="mock-bar-row">
                         <span class="mock-cat">{{ row.category }}</span>
                         <div class="mock-bar-track">
@@ -76,6 +76,7 @@
                 <p class="profile-empty">No expenses recorded yet.</p>
                 {% endif %}
             </div>
+            {# Step 05: category breakdown end #}
 
         </div>
 

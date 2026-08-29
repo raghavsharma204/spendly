@@ -6,8 +6,8 @@ from flask import Flask, flash, redirect, render_template, request, session, url
 from database.db import (
     authenticate_user,
     create_user,
+    get_category_breakdown,
     get_db,
-    get_expense_summary,
     get_recent_transactions,
     get_summary_stats,
     get_user_by_id,
@@ -114,7 +114,6 @@ def profile():
         session.clear()
         return redirect(url_for("login"))
 
-    summary = get_expense_summary(user_id)
     member_since = datetime.strptime(user["created_at"][:10], "%Y-%m-%d").strftime("%B %d, %Y")
 
     # --- Transaction history (Step 05: transaction history) ---
@@ -123,13 +122,16 @@ def profile():
     # --- Summary stats (Step 05: summary stats) ---
     stats = get_summary_stats(user_id)
 
+    # --- Category breakdown (Step 05: category breakdown) ---
+    category_breakdown = get_category_breakdown(user_id)
+
     return render_template(
         "profile.html",
         user=user,
-        summary=summary,
         member_since=member_since,
         transactions=transactions,
         stats=stats,
+        category_breakdown=category_breakdown,
     )
 
 
