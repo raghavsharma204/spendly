@@ -58,6 +58,37 @@
 
         </div>
 
+        {# Step 05: transaction history start #}
+        <div class="profile-history">
+            <h2 class="profile-card-title">Recent transactions</h2>
+
+            {% if transactions %}
+            <table class="profile-txn-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Category</th>
+                        <th>Description</th>
+                        <th class="profile-txn-amt">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for txn in transactions %}
+                    <tr>
+                        <td>{{ txn.display_date }}</td>
+                        <td>{{ txn.category }}</td>
+                        <td>{{ txn.description or "—" }}</td>
+                        <td class="profile-txn-amt">{{ txn.amount | currency }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="profile-empty">No expenses recorded yet.</p>
+            {% endif %}
+        </div>
+        {# Step 05: transaction history end #}
+
     </div>
 </section>
 

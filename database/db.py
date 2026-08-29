@@ -1,6 +1,6 @@
 import os
 import sqlite3
-from datetime import date
+from datetime import date, datetime
 
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -173,3 +173,33 @@ def get_expense_summary(user_id):
         })
 
     return {"total": total, "breakdown": breakdown}
+
+
+def get_recent_transactions(user_id, limit=10):
+    """Return the user's most recent expenses (newest first), at most `limit` rows."""
+    conn = get_db()
+    try:
+        rows = conn.execute(
+            """
+            SELECT id, amount, category, date, description
+            FROM expenses
+            WHERE user_id = ?
+            ORDER BY date DESC, id DESC
+            LIMIT ?
+            """,
+            (user_id, limit),
+        ).fetchall()
+    finally:
+        conn.close()
+
+    transactions = []
+    for row in rows:
+        transactions.append({
+            "id": row["id"],
+            "amount": row["amount"],
+            "category": row["category"],
+            "date": row["date"],
+            "display_date": datetime.strptime(row["date"], "%Y-%m-%d").strftime("%b %d, %Y"),
+            "description": row["description"],
+        })
+    return transactions

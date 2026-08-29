@@ -8,6 +8,7 @@ from database.db import (
     create_user,
     get_db,
     get_expense_summary,
+    get_recent_transactions,
     get_user_by_id,
     init_db,
     seed_db,
@@ -115,7 +116,16 @@ def profile():
     summary = get_expense_summary(user_id)
     member_since = datetime.strptime(user["created_at"][:10], "%Y-%m-%d").strftime("%B %d, %Y")
 
-    return render_template("profile.html", user=user, summary=summary, member_since=member_since)
+    # --- Transaction history (Step 05: transaction history) ---
+    transactions = get_recent_transactions(user_id)
+
+    return render_template(
+        "profile.html",
+        user=user,
+        summary=summary,
+        member_since=member_since,
+        transactions=transactions,
+    )
 
 
 # ------------------------------------------------------------------ #
