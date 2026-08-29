@@ -1,6 +1,6 @@
 import os
 import sqlite3
-from datetime import date
+from datetime import date, datetime
 
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -144,8 +144,71 @@ def get_user_by_id(user_id):
         conn.close()
 
 
-def get_expense_summary(user_id):
-    """Return the all-time total spend and a per-category breakdown for a user."""
+def get_recent_transactions(user_id, limit=10):
+    """Return the user's most recent expenses (newest first), at most `limit` rows."""
+    conn = get_db()
+    try:
+        rows = conn.execute(
+            """
+            SELECT id, amount, category, date, description
+            FROM expenses
+            WHERE user_id = ?
+            ORDER BY date DESC, id DESC
+            LIMIT ?
+            """,
+            (user_id, limit),
+        ).fetchall()
+    finally:
+        conn.close()
+
+    transactions = []
+    for row in rows:
+        transactions.append({
+            "id": row["id"],
+            "amount": row["amount"],
+            "category": row["category"],
+            "date": row["date"],
+            "display_date": datetime.strptime(row["date"], "%Y-%m-%d").strftime("%b %d, %Y"),
+            "description": row["description"],
+        })
+    return transactions
+
+
+def get_summary_stats(user_id):
+    """Return headline spend figures for a user: all-time total, transaction count,
+    average transaction amount, and current calendar-month total."""
+    conn = get_db()
+    try:
+        row = conn.execute(
+            """
+            SELECT
+                COUNT(*) AS txn_count,
+                COALESCE(SUM(amount), 0) AS total,
+                COALESCE(AVG(amount), 0) AS avg_amount,
+                COALESCE(SUM(
+                    CASE WHEN strftime('%Y-%m', date) = strftime('%Y-%m', 'now')
+                         THEN amount END
+                ), 0) AS month_total
+            FROM expenses
+            WHERE user_id = ?
+            """,
+            (user_id,),
+        ).fetchone()
+    finally:
+        conn.close()
+
+    return {
+        "total": row["total"],
+        "txn_count": row["txn_count"],
+        "avg_amount": row["avg_amount"],
+        "month_total": row["month_total"],
+    }
+
+
+def get_category_breakdown(user_id):
+    """Return per-category spend totals for a user as bar rows, ordered by CATEGORIES.
+    Each row: {category, total, pct, variant}. pct is relative to the largest category.
+    Categories with no spend are omitted. Returns [] if the user has no expenses."""
     conn = get_db()
     try:
         rows = conn.execute(
@@ -156,7 +219,6 @@ def get_expense_summary(user_id):
         conn.close()
 
     by_category = {row["category"]: row["total"] for row in rows}
-    total = sum(by_category.values())
     max_category_total = max(by_category.values()) if by_category else 0
 
     breakdown = []
@@ -171,5 +233,4 @@ def get_expense_summary(user_id):
             "pct": pct,
             "variant": CATEGORIES.index(category) + 1,
         })
-
-    return {"total": total, "breakdown": breakdown}
+    return breakdown

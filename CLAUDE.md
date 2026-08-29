@@ -69,8 +69,8 @@ There is no test suite, lint config, or build step yet — `pytest` and `pytest-
 |'GET/' |	Implemented — renders landing.html |
 'GET /register' |	Implemented — renders register.html |
 'GET /login'	| Implemented — renders login.html |
-|'GET /logout' | Stub — Step 3 |
-|'GET /profile'	| Stub — Step 4   |
+|'GET /logout' | Implemented — clears session, redirects to /login |
+|'GET /profile'	| Implemented — renders profile.html (stats, category breakdown, recent transactions) |
 |'GET /expenses/add'	| Stub — Step 7   |
 |'GET /expenses/<id>/edit' |	Stub — Step 8|
 |'GET /expenses/<id>/delete'	| Stub — Step 9|

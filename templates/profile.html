@@ -12,6 +12,27 @@
             <p class="profile-subtitle">Account details and your all-time spending snapshot</p>
         </div>
 
+        {# Step 05: summary stats start #}
+        <div class="profile-stats">
+            <div class="profile-stat">
+                <span class="profile-stat-label">All-time spend</span>
+                <span class="profile-stat-value">{{ stats.total | currency }}</span>
+            </div>
+            <div class="profile-stat">
+                <span class="profile-stat-label">Transactions</span>
+                <span class="profile-stat-value">{{ stats.txn_count }}</span>
+            </div>
+            <div class="profile-stat">
+                <span class="profile-stat-label">Average transaction</span>
+                <span class="profile-stat-value">{{ stats.avg_amount | currency }}</span>
+            </div>
+            <div class="profile-stat">
+                <span class="profile-stat-label">This month</span>
+                <span class="profile-stat-value">{{ stats.month_total | currency }}</span>
+            </div>
+        </div>
+        {# Step 05: summary stats end #}
+
         <div class="profile-grid">
 
             <div class="auth-card profile-account-card">
@@ -32,15 +53,15 @@
                 </dl>
             </div>
 
-            <div class="mock-card profile-summary-card">
+            {# Step 05: category breakdown start #}
+            <div class="mock-card profile-breakdown-card">
                 <div class="mock-card-header">
-                    <span class="mock-label">All-time spend</span>
-                    <span class="mock-total">{{ summary.total | currency }}</span>
+                    <span class="mock-label">Spending by category</span>
                 </div>
 
-                {% if summary.breakdown %}
+                {% if category_breakdown %}
                 <div class="mock-bars">
-                    {% for row in summary.breakdown %}
+                    {% for row in category_breakdown %}
                     <div class="mock-bar-row">
                         <span class="mock-cat">{{ row.category }}</span>
                         <div class="mock-bar-track">
@@ -55,8 +76,40 @@
                 <p class="profile-empty">No expenses recorded yet.</p>
                 {% endif %}
             </div>
+            {# Step 05: category breakdown end #}
 
         </div>
+
+        {# Step 05: transaction history start #}
+        <div class="profile-history">
+            <h2 class="profile-card-title">Recent transactions</h2>
+
+            {% if transactions %}
+            <table class="profile-txn-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Category</th>
+                        <th>Description</th>
+                        <th class="profile-txn-amt">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for txn in transactions %}
+                    <tr>
+                        <td>{{ txn.display_date }}</td>
+                        <td>{{ txn.category }}</td>
+                        <td>{{ txn.description or "—" }}</td>
+                        <td class="profile-txn-amt">{{ txn.amount | currency }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="profile-empty">No expenses recorded yet.</p>
+            {% endif %}
+        </div>
+        {# Step 05: transaction history end #}
 
     </div>
 </section>
