@@ -1,6 +1,7 @@
 ---
 name: spendly-frontend-ui
 description: Design system and markup conventions for Spendly's frontend (Flask + Jinja2 + plain CSS). Use whenever building or editing ANY page, template, form, button, card, or UI element in Spendly — even small tweaks — to keep visual style consistent with the existing app. Trigger this even if the user just says "add a page", "make a form", "style this", or mentions templates/, static/css, login, register, dashboard, etc.
+disable-model-invocation: true
 ---
 
 # Spendly Frontend UI
