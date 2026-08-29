@@ -9,6 +9,7 @@ from database.db import (
     get_db,
     get_expense_summary,
     get_recent_transactions,
+    get_summary_stats,
     get_user_by_id,
     init_db,
     seed_db,
@@ -119,12 +120,16 @@ def profile():
     # --- Transaction history (Step 05: transaction history) ---
     transactions = get_recent_transactions(user_id)
 
+    # --- Summary stats (Step 05: summary stats) ---
+    stats = get_summary_stats(user_id)
+
     return render_template(
         "profile.html",
         user=user,
         summary=summary,
         member_since=member_since,
         transactions=transactions,
+        stats=stats,
     )
 
 

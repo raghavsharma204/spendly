@@ -203,3 +203,34 @@ def get_recent_transactions(user_id, limit=10):
             "description": row["description"],
         })
     return transactions
+
+
+def get_summary_stats(user_id):
+    """Return headline spend figures for a user: all-time total, transaction count,
+    average transaction amount, and current calendar-month total."""
+    conn = get_db()
+    try:
+        row = conn.execute(
+            """
+            SELECT
+                COUNT(*) AS txn_count,
+                COALESCE(SUM(amount), 0) AS total,
+                COALESCE(AVG(amount), 0) AS avg_amount,
+                COALESCE(SUM(
+                    CASE WHEN strftime('%Y-%m', date) = strftime('%Y-%m', 'now')
+                         THEN amount END
+                ), 0) AS month_total
+            FROM expenses
+            WHERE user_id = ?
+            """,
+            (user_id,),
+        ).fetchone()
+    finally:
+        conn.close()
+
+    return {
+        "total": row["total"],
+        "txn_count": row["txn_count"],
+        "avg_amount": row["avg_amount"],
+        "month_total": row["month_total"],
+    }

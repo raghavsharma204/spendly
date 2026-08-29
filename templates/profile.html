@@ -12,6 +12,27 @@
             <p class="profile-subtitle">Account details and your all-time spending snapshot</p>
         </div>
 
+        {# Step 05: summary stats start #}
+        <div class="profile-stats">
+            <div class="profile-stat">
+                <span class="profile-stat-label">All-time spend</span>
+                <span class="profile-stat-value">{{ stats.total | currency }}</span>
+            </div>
+            <div class="profile-stat">
+                <span class="profile-stat-label">Transactions</span>
+                <span class="profile-stat-value">{{ stats.txn_count }}</span>
+            </div>
+            <div class="profile-stat">
+                <span class="profile-stat-label">Average transaction</span>
+                <span class="profile-stat-value">{{ stats.avg_amount | currency }}</span>
+            </div>
+            <div class="profile-stat">
+                <span class="profile-stat-label">This month</span>
+                <span class="profile-stat-value">{{ stats.month_total | currency }}</span>
+            </div>
+        </div>
+        {# Step 05: summary stats end #}
+
         <div class="profile-grid">
 
             <div class="auth-card profile-account-card">
