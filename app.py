@@ -30,6 +30,41 @@ def format_currency(value):
 
 
 # ------------------------------------------------------------------ #
+# Helpers                                                             #
+# ------------------------------------------------------------------ #
+
+ISO_DATE = "%Y-%m-%d"
+
+
+def _parse_iso_date(value):
+    """Parse a user-supplied YYYY-MM-DD string into a datetime, or None if absent
+    or invalid.
+
+    <input type="date"> always submits a zero-padded YYYY-MM-DD; this also
+    tolerates loosely padded values (e.g. '2026-1-1') from hand-crafted query
+    strings. strptime still rejects impossible dates and trailing junk.
+    """
+    if not value:
+        return None
+    try:
+        return datetime.strptime(value, ISO_DATE)
+    except ValueError:
+        return None
+
+
+def _format_filter_label(start, end):
+    """Human-readable range caption from datetimes already validated by
+    _parse_iso_date. Assumes at least one bound is non-None."""
+    start_h = start.strftime("%b %d, %Y") if start else None
+    end_h = end.strftime("%b %d, %Y") if end else None
+    if start_h and end_h:
+        return f"{start_h} to {end_h}"
+    if start_h:
+        return f"From {start_h}"
+    return f"Through {end_h}"
+
+
+# ------------------------------------------------------------------ #
 # Routes                                                              #
 # ------------------------------------------------------------------ #
 
@@ -116,14 +151,23 @@ def profile():
 
     member_since = datetime.strptime(user["created_at"][:10], "%Y-%m-%d").strftime("%B %d, %Y")
 
+    # --- Date filter (Step 06) ---
+    start = _parse_iso_date(request.args.get("start"))
+    end = _parse_iso_date(request.args.get("end"))
+    filter_active = start is not None or end is not None
+    invalid_range = start is not None and end is not None and start > end
+    filter_label = _format_filter_label(start, end) if filter_active else None
+    start_iso = start.strftime(ISO_DATE) if start else None
+    end_iso = end.strftime(ISO_DATE) if end else None
+
     # --- Transaction history (Step 05: transaction history) ---
-    transactions = get_recent_transactions(user_id)
+    transactions = get_recent_transactions(user_id, start=start_iso, end=end_iso)
 
     # --- Summary stats (Step 05: summary stats) ---
-    stats = get_summary_stats(user_id)
+    stats = get_summary_stats(user_id, start=start_iso, end=end_iso)
 
     # --- Category breakdown (Step 05: category breakdown) ---
-    category_breakdown = get_category_breakdown(user_id)
+    category_breakdown = get_category_breakdown(user_id, start=start_iso, end=end_iso)
 
     return render_template(
         "profile.html",
@@ -132,6 +176,11 @@ def profile():
         transactions=transactions,
         stats=stats,
         category_breakdown=category_breakdown,
+        start_iso=start_iso,
+        end_iso=end_iso,
+        filter_active=filter_active,
+        invalid_range=invalid_range,
+        filter_label=filter_label,
     )
 
 

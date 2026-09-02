@@ -12,6 +12,36 @@
             <p class="profile-subtitle">Account details and your all-time spending snapshot</p>
         </div>
 
+        {# Step 06: date filter start #}
+        <form class="profile-filter" method="GET" action="{{ url_for('profile') }}">
+            <div class="profile-filter-fields">
+                <div class="form-group profile-filter-group">
+                    <label for="filter-start">From</label>
+                    <input type="date" id="filter-start" name="start"
+                           class="form-input" value="{{ start_iso or '' }}">
+                </div>
+                <div class="form-group profile-filter-group">
+                    <label for="filter-end">To</label>
+                    <input type="date" id="filter-end" name="end"
+                           class="form-input" value="{{ end_iso or '' }}">
+                </div>
+                <button type="submit" class="btn-submit profile-filter-apply">Apply</button>
+                {% if filter_active %}
+                <a class="profile-filter-clear" href="{{ url_for('profile') }}">Clear</a>
+                {% endif %}
+            </div>
+            {% if filter_active %}
+            <p class="profile-filter-caption">
+                {% if invalid_range %}
+                Showing {{ filter_label }} — the start date is after the end date, so nothing matches.
+                {% else %}
+                Showing {{ filter_label }}
+                {% endif %}
+            </p>
+            {% endif %}
+        </form>
+        {# Step 06: date filter end #}
+
         {# Step 05: summary stats start #}
         <div class="profile-stats">
             <div class="profile-stat">
