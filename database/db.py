@@ -144,8 +144,28 @@ def get_user_by_id(user_id):
         conn.close()
 
 
-def get_recent_transactions(user_id, limit=10):
-    """Return the user's most recent expenses (newest first), at most `limit` rows."""
+def _date_range_clause(start, end):
+    """Return (sql_fragment, params) for an optional inclusive date range.
+
+    Fragment is "" when both bounds are None. Values are bound with ?
+    placeholders — the fragment never contains a literal date.
+    """
+    fragment = ""
+    params = []
+    if start is not None:
+        fragment += " AND date >= ?"
+        params.append(start)
+    if end is not None:
+        fragment += " AND date <= ?"
+        params.append(end)
+    return fragment, tuple(params)
+
+
+def get_recent_transactions(user_id, limit=10, start=None, end=None):
+    """Return the user's most recent expenses (newest first), at most `limit` rows.
+    Optionally restrict to expenses whose date falls in [start, end] (inclusive,
+    ISO YYYY-MM-DD strings; either bound may be None)."""
+    date_clause, date_params = _date_range_clause(start, end)
     conn = get_db()
     try:
         rows = conn.execute(
@@ -153,10 +173,13 @@ def get_recent_transactions(user_id, limit=10):
             SELECT id, amount, category, date, description
             FROM expenses
             WHERE user_id = ?
+            """
+            + date_clause
+            + """
             ORDER BY date DESC, id DESC
             LIMIT ?
             """,
-            (user_id, limit),
+            (user_id, *date_params, limit),
         ).fetchall()
     finally:
         conn.close()
@@ -174,9 +197,13 @@ def get_recent_transactions(user_id, limit=10):
     return transactions
 
 
-def get_summary_stats(user_id):
+def get_summary_stats(user_id, start=None, end=None):
     """Return headline spend figures for a user: all-time total, transaction count,
-    average transaction amount, and current calendar-month total."""
+    average transaction amount, and current calendar-month total. When start/end
+    (inclusive ISO YYYY-MM-DD bounds, either may be None) are given, total, count
+    and average are scoped to that range; month_total always means the current
+    calendar month (and so reads 0 when the range excludes it)."""
+    date_clause, date_params = _date_range_clause(start, end)
     conn = get_db()
     try:
         row = conn.execute(
@@ -191,8 +218,9 @@ def get_summary_stats(user_id):
                 ), 0) AS month_total
             FROM expenses
             WHERE user_id = ?
-            """,
-            (user_id,),
+            """
+            + date_clause,
+            (user_id, *date_params),
         ).fetchone()
     finally:
         conn.close()
@@ -205,15 +233,26 @@ def get_summary_stats(user_id):
     }
 
 
-def get_category_breakdown(user_id):
+def get_category_breakdown(user_id, start=None, end=None):
     """Return per-category spend totals for a user as bar rows, ordered by CATEGORIES.
     Each row: {category, total, pct, variant}. pct is relative to the largest category.
-    Categories with no spend are omitted. Returns [] if the user has no expenses."""
+    Categories with no spend are omitted. Optionally restrict to expenses whose date
+    falls in [start, end] (inclusive ISO YYYY-MM-DD bounds, either may be None).
+    Returns [] if the user has no expenses in range."""
+    date_clause, date_params = _date_range_clause(start, end)
     conn = get_db()
     try:
         rows = conn.execute(
-            "SELECT category, SUM(amount) AS total FROM expenses WHERE user_id = ? GROUP BY category",
-            (user_id,),
+            """
+            SELECT category, SUM(amount) AS total
+            FROM expenses
+            WHERE user_id = ?
+            """
+            + date_clause
+            + """
+            GROUP BY category
+            """,
+            (user_id, *date_params),
         ).fetchall()
     finally:
         conn.close()

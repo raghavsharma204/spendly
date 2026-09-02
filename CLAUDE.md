@@ -70,7 +70,7 @@ There is no test suite, lint config, or build step yet — `pytest` and `pytest-
 'GET /register' |	Implemented — renders register.html |
 'GET /login'	| Implemented — renders login.html |
 |'GET /logout' | Implemented — clears session, redirects to /login |
-|'GET /profile'	| Implemented — renders profile.html (stats, category breakdown, recent transactions) |
+|'GET /profile'	| Implemented — renders profile.html (stats, category breakdown, recent transactions); optional ?start / ?end (YYYY-MM-DD) query params scope all three sections to a date range |
 |'GET /expenses/add'	| Stub — Step 7   |
 |'GET /expenses/<id>/edit' |	Stub — Step 8|
 |'GET /expenses/<id>/delete'	| Stub — Step 9|
