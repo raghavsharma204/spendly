@@ -1,10 +1,13 @@
+import math
 import os
 from datetime import date, datetime
 
 from flask import Flask, flash, redirect, render_template, request, session, url_for
 
 from database.db import (
+    CATEGORIES,
     authenticate_user,
+    create_expense,
     create_user,
     get_category_breakdown,
     get_db,
@@ -34,6 +37,12 @@ def format_currency(value):
 # ------------------------------------------------------------------ #
 
 ISO_DATE = "%Y-%m-%d"
+
+# Upper bound for a single expense amount (exclusive) and the max length of a
+# free-text description. Kept here as the single source of truth — the add
+# form's maxlength attribute mirrors MAX_DESCRIPTION_LEN.
+MAX_EXPENSE_AMOUNT = 10_000_000
+MAX_DESCRIPTION_LEN = 200
 
 
 def _parse_iso_date(value):
@@ -191,14 +200,74 @@ def analytics():
     return render_template("analytics.html")
 
 
+@app.route("/expenses/add", methods=["GET", "POST"])
+def add_expense():
+    user_id = session.get("user_id")
+    if not user_id:
+        return redirect(url_for("login"))
+
+    user = get_user_by_id(user_id)
+    if user is None:
+        session.clear()
+        return redirect(url_for("login"))
+
+    today = date.today().strftime(ISO_DATE)
+
+    if request.method == "GET":
+        return render_template(
+            "add_expense.html",
+            categories=CATEGORIES,
+            today=today,
+            max_description_len=MAX_DESCRIPTION_LEN,
+        )
+
+    amount_raw = request.form.get("amount", "").strip()
+    category = request.form.get("category", "").strip()
+    date_raw = request.form.get("date", "").strip()
+    description = request.form.get("description", "").strip()
+
+    def _fail(msg):
+        return render_template(
+            "add_expense.html",
+            categories=CATEGORIES,
+            today=today,
+            max_description_len=MAX_DESCRIPTION_LEN,
+            error=msg,
+            amount=amount_raw,
+            category=category,
+            date=date_raw,
+            description=description,
+        )
+
+    try:
+        amount = round(float(amount_raw), 2)
+    except ValueError:
+        return _fail("Enter a valid amount.")
+    if not math.isfinite(amount) or amount <= 0:
+        return _fail("Amount must be greater than zero.")
+    if amount >= MAX_EXPENSE_AMOUNT:
+        return _fail(f"Amount must be less than ₹{MAX_EXPENSE_AMOUNT:,}.")
+
+    if category not in CATEGORIES:
+        return _fail("Choose a valid category.")
+
+    expense_date = _parse_iso_date(date_raw)
+    if expense_date is None:
+        return _fail("Enter a valid date.")
+
+    if len(description) > MAX_DESCRIPTION_LEN:
+        return _fail(f"Description must be {MAX_DESCRIPTION_LEN} characters or fewer.")
+
+    create_expense(
+        user_id, amount, category, expense_date.strftime(ISO_DATE), description or None
+    )
+    flash("Expense added.")
+    return redirect(url_for("profile"))
+
+
 # ------------------------------------------------------------------ #
 # Placeholder routes — students will implement these                  #
 # ------------------------------------------------------------------ #
-
-@app.route("/expenses/add")
-def add_expense():
-    return "Add expense — coming in Step 7"
-
 
 @app.route("/expenses/<int:id>/edit")
 def edit_expense(id):
