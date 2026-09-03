@@ -1,0 +1,279 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics — Spendly{% endblock %}
+
+{% block head %}
+{# Analytics uses Inter to match the Figma design; scoped to this page only #}
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+{#
+  Analytics dashboard — static replica of the Figma "spendly_analytics" frame.
+  All figures are the design's sample values (USD), not live data.
+#}
+
+{% set income_legend = [
+    ("Salary", "60%", "$3,144.00", "teal"),
+    ("Freelance", "20%", "$1,048.00", "blue"),
+    ("Investments", "10%", "$524.00", "indigo"),
+    ("Other", "10%", "$524.00", "amber"),
+] %}
+
+{% set spending_legend = [
+    ("Housing", "35%", "$1,355.00", "blue"),
+    ("Food & Dining", "22%", "$851.70", "rose"),
+    ("Transportation", "15%", "$580.70", "amber"),
+    ("Shopping", "12%", "$464.60", "indigo"),
+    ("Utilities", "8%", "$309.70", "green"),
+    ("Other", "8%", "$309.70", "slate"),
+] %}
+
+{% set budgets = [
+    ("Groceries", "$420", "$500", 84, "over"),
+    ("Dining Out", "$185", "$250", 74, "ok"),
+    ("Transportation", "$210", "$300", 70, "ok"),
+    ("Entertainment", "$95", "$150", 63, "ok"),
+    ("Shopping", "$340", "$400", 85, "over"),
+] %}
+
+{% set history = [
+    ("Apr", 112, 91),
+    ("May", 120, 96),
+    ("Jun", 109, 101),
+    ("Jul", 128, 93),
+    ("Aug", 136, 104),
+    ("Sep", 140, 103),
+] %}
+
+{% set trend_months = ["Apr 2026", "May 2026", "Jun 2026", "Jul 2026", "Aug 2026", "Sep 2026"] %}
+{% set income_dots = [(0, 30.0), (20, 25.0), (40, 31.82), (60, 20.0), (80, 15.0), (100, 12.73)] %}
+{% set expense_dots = [(0, 43.18), (20, 40.0), (40, 36.82), (60, 41.82), (80, 35.0), (100, 35.45)] %}
+
+<div class="an-page">
+  <div class="an-inner">
+
+    {# Page header: title + month stepper + filter selects #}
+    <header class="an-header">
+      <h1 class="an-title">Analytics</h1>
+      <div class="an-controls">
+        <div class="an-stepper">
+          <button type="button" class="an-step-btn" aria-label="Previous month">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <span class="an-stepper-label">Sep 2026</span>
+          <button type="button" class="an-step-btn" aria-label="Next month">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+        <div class="an-selects">
+          <button type="button" class="an-select">
+            <span>All Accounts</span>
+            <svg viewBox="0 0 14 14" aria-hidden="true"><path d="M3 5l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <button type="button" class="an-select">
+            <span>All Categories</span>
+            <svg viewBox="0 0 14 14" aria-hidden="true"><path d="M3 5l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    {# KPI row #}
+    <section class="an-kpis">
+      <div class="an-kpi">
+        <div class="an-kpi-top">
+          <span class="an-kpi-label">Total Income</span>
+          <span class="an-badge an-badge--green">+12.3% vs last month</span>
+        </div>
+        <span class="an-kpi-value">$5,240.00</span>
+      </div>
+      <div class="an-kpi">
+        <div class="an-kpi-top">
+          <span class="an-kpi-label">Total Expenses</span>
+          <span class="an-badge an-badge--red">+4.7% vs last month</span>
+        </div>
+        <span class="an-kpi-value">$3,871.50</span>
+      </div>
+      <div class="an-kpi">
+        <div class="an-kpi-top">
+          <span class="an-kpi-label">Net Savings</span>
+          <span class="an-badge an-badge--green">+28.1% vs last month</span>
+        </div>
+        <span class="an-kpi-value">$1,368.50</span>
+      </div>
+      <div class="an-kpi">
+        <div class="an-kpi-top">
+          <span class="an-kpi-label">Budget Used</span>
+        </div>
+        <span class="an-kpi-value">73.8%</span>
+        <div class="an-kpi-ring">
+          <svg viewBox="0 0 64 64" aria-hidden="true">
+            <circle cx="32" cy="32" r="28" fill="none" stroke="var(--an-red-bg)" stroke-width="6"/>
+            <g transform="rotate(-90 32 32)">
+              <circle cx="32" cy="32" r="28" fill="none" stroke="var(--an-rose)" stroke-width="6"
+                      stroke-linecap="round" pathLength="100" stroke-dasharray="74 100"/>
+            </g>
+          </svg>
+          <span class="an-kpi-ring-label">74%</span>
+        </div>
+      </div>
+    </section>
+
+    {# Monthly Trends — line chart #}
+    <section class="an-card">
+      <div class="an-card-head">
+        <div class="an-card-heading">
+          <h2 class="an-card-title">Monthly Trends</h2>
+          <p class="an-card-sub">Income vs Expenses comparison</p>
+        </div>
+        <div class="an-legend">
+          <span class="an-legend-item"><span class="an-sw an-sw--teal"></span>Income</span>
+          <span class="an-legend-item"><span class="an-sw an-sw--rose"></span>Expenses</span>
+        </div>
+      </div>
+
+      <div class="an-linechart">
+        <div class="an-axis-y">
+          <span>$6,000</span><span>$4,500</span><span>$3,000</span><span>$1,500</span><span>$0</span>
+        </div>
+        <div class="an-linechart-main">
+          <div class="an-linechart-plot">
+            <svg class="an-linechart-svg" viewBox="0 0 1200 220" preserveAspectRatio="none" aria-hidden="true">
+              {% for y in [0, 55, 110, 165, 220] %}
+              <line x1="0" y1="{{ y }}" x2="1200" y2="{{ y }}" stroke="var(--an-track)" stroke-width="1"
+                    stroke-dasharray="4 4" vector-effect="non-scaling-stroke"/>
+              {% endfor %}
+              <polygon points="0,66 240,55 480,70 720,44 960,33 1200,28 1200,220 0,220" fill="rgba(13,148,136,0.05)"/>
+              <polygon points="0,95 240,88 480,81 720,92 960,77 1200,78 1200,220 0,220" fill="rgba(244,63,94,0.05)"/>
+              <polyline points="0,66 240,55 480,70 720,44 960,33 1200,28" fill="none" stroke="var(--an-teal)"
+                        stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+              <polyline points="0,95 240,88 480,81 720,92 960,77 1200,78" fill="none" stroke="var(--an-rose)"
+                        stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+            </svg>
+            {% for x, y in income_dots %}
+            <span class="an-dot an-dot--teal" style="left: {{ x }}%; top: {{ y }}%;"></span>
+            {% endfor %}
+            {% for x, y in expense_dots %}
+            <span class="an-dot an-dot--rose" style="left: {{ x }}%; top: {{ y }}%;"></span>
+            {% endfor %}
+          </div>
+          <div class="an-axis-x">
+            {% for m in trend_months %}<span>{{ m }}</span>{% endfor %}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {# Split row: income donut / spending donut / budget bars #}
+    <section class="an-split">
+
+      <div class="an-card">
+        <h2 class="an-card-title">Total Income</h2>
+        <div class="an-donut-row">
+          <div class="an-donut">
+            <svg viewBox="0 0 160 160" aria-hidden="true">
+              <g transform="rotate(-90 80 80)" fill="none" stroke-width="22">
+                <circle cx="80" cy="80" r="64" stroke="var(--an-teal)"   pathLength="100" stroke-dasharray="60 100" stroke-dashoffset="0"/>
+                <circle cx="80" cy="80" r="64" stroke="var(--an-blue)"   pathLength="100" stroke-dasharray="20 100" stroke-dashoffset="-60"/>
+                <circle cx="80" cy="80" r="64" stroke="var(--an-indigo)" pathLength="100" stroke-dasharray="10 100" stroke-dashoffset="-80"/>
+                <circle cx="80" cy="80" r="64" stroke="var(--an-amber)"  pathLength="100" stroke-dasharray="10 100" stroke-dashoffset="-90"/>
+              </g>
+            </svg>
+            <div class="an-donut-center">
+              <span class="an-donut-center-label">Total Income</span>
+              <span class="an-donut-center-value">$5,240</span>
+            </div>
+          </div>
+          <div class="an-donut-legend">
+            {% for name, pct, amt, color in income_legend %}
+            <div class="an-donut-legend-row">
+              <span class="an-dll-left"><span class="an-sw an-sw--{{ color }}"></span>{{ name }}</span>
+              <span class="an-dll-right"><span class="an-dll-pct">{{ pct }}</span><span class="an-dll-amt">{{ amt }}</span></span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <div class="an-card">
+        <h2 class="an-card-title">Spending by Category</h2>
+        <div class="an-donut-row">
+          <div class="an-donut">
+            <svg viewBox="0 0 160 160" aria-hidden="true">
+              <g transform="rotate(-90 80 80)" fill="none" stroke-width="22">
+                <circle cx="80" cy="80" r="64" stroke="var(--an-blue)"   pathLength="100" stroke-dasharray="35 100" stroke-dashoffset="0"/>
+                <circle cx="80" cy="80" r="64" stroke="var(--an-rose)"   pathLength="100" stroke-dasharray="22 100" stroke-dashoffset="-35"/>
+                <circle cx="80" cy="80" r="64" stroke="var(--an-amber)"  pathLength="100" stroke-dasharray="15 100" stroke-dashoffset="-57"/>
+                <circle cx="80" cy="80" r="64" stroke="var(--an-indigo)" pathLength="100" stroke-dasharray="12 100" stroke-dashoffset="-72"/>
+                <circle cx="80" cy="80" r="64" stroke="var(--an-green)"  pathLength="100" stroke-dasharray="8 100"  stroke-dashoffset="-84"/>
+                <circle cx="80" cy="80" r="64" stroke="var(--an-slate)"  pathLength="100" stroke-dasharray="8 100"  stroke-dashoffset="-92"/>
+              </g>
+            </svg>
+            <div class="an-donut-center">
+              <span class="an-donut-center-label">Total Spend</span>
+              <span class="an-donut-center-value">$3,871</span>
+            </div>
+          </div>
+          <div class="an-donut-legend">
+            {% for name, pct, amt, color in spending_legend %}
+            <div class="an-donut-legend-row">
+              <span class="an-dll-left"><span class="an-sw an-sw--{{ color }}"></span>{{ name }}</span>
+              <span class="an-dll-right"><span class="an-dll-pct">{{ pct }}</span><span class="an-dll-amt">{{ amt }}</span></span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <div class="an-card">
+        <h2 class="an-card-title">Budget Progress</h2>
+        <div class="an-budget-list">
+          {% for name, spent, cap, pct, state in budgets %}
+          <div class="an-budget-row">
+            <div class="an-budget-top">
+              <span class="an-budget-name">{{ name }}</span>
+              <span class="an-budget-amt">{{ spent }} / <strong>{{ cap }}</strong></span>
+            </div>
+            <div class="an-budget-bar">
+              <span class="an-budget-track">
+                <span class="an-budget-fill an-budget-fill--{{ state }}" style="width: {{ pct }}%;"></span>
+              </span>
+              <span class="an-budget-pct">{{ pct }}%</span>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+    </section>
+
+    {# Income vs Expenses History — grouped bar chart #}
+    <section class="an-card">
+      <div class="an-card-heading">
+        <h2 class="an-card-title">Income vs Expenses History</h2>
+        <p class="an-card-sub">Month-over-month comparison</p>
+      </div>
+      <div class="an-barchart">
+        <div class="an-axis-y an-axis-y--bars">
+          <span>$6,000</span><span>$4,000</span><span>$2,000</span><span>$0</span>
+        </div>
+        <div class="an-barchart-main">
+          <div class="an-bars">
+            {% for label, inc, exp in history %}
+            <div class="an-bar-group">
+              <div class="an-bar-pair">
+                <span class="an-bar an-bar--income" style="height: {{ inc }}px;"></span>
+                <span class="an-bar an-bar--expense" style="height: {{ exp }}px;"></span>
+              </div>
+              <span class="an-bar-label">{{ label }}</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+{% endblock %}

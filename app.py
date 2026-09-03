@@ -184,6 +184,13 @@ def profile():
     )
 
 
+@app.route("/analytics")
+def analytics():
+    # Static replica of the Figma "spendly_analytics" design. Sample figures
+    # live in the template; no data is fetched yet.
+    return render_template("analytics.html")
+
+
 # ------------------------------------------------------------------ #
 # Placeholder routes — students will implement these                  #
 # ------------------------------------------------------------------ #

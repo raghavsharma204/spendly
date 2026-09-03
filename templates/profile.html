@@ -8,8 +8,11 @@
     <div class="profile-inner">
 
         <div class="profile-header">
-            <h1 class="profile-title">Your account</h1>
-            <p class="profile-subtitle">Account details and your all-time spending snapshot</p>
+            <div>
+                <h1 class="profile-title">Your account</h1>
+                <p class="profile-subtitle">Account details and your all-time spending snapshot</p>
+            </div>
+            <a href="{{ url_for('analytics') }}" class="btn-primary">View analytics</a>
         </div>
 
         {# Step 06: date filter start #}
