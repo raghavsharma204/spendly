@@ -117,6 +117,27 @@ def create_user(name, email, password):
         conn.close()
 
 
+def create_expense(user_id, amount, category, date, description):
+    """Insert one expense row for a user. Returns the new expense id.
+
+    `description` may be None (stored as SQL NULL). Callers must validate
+    amount / category / date before calling — this helper only writes.
+    """
+    conn = get_db()
+    try:
+        cursor = conn.execute(
+            """
+            INSERT INTO expenses (user_id, amount, category, date, description)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (user_id, amount, category, date, description),
+        )
+        conn.commit()
+        return cursor.lastrowid
+    finally:
+        conn.close()
+
+
 def authenticate_user(email, password):
     """Verify email/password against the users table. Returns the user row on success, None otherwise."""
     email = email.strip().lower()

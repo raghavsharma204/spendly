@@ -7,12 +7,21 @@
 <section class="profile-section">
     <div class="profile-inner">
 
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <div class="auth-success">{{ messages[0] }}</div>
+        {% endif %}
+        {% endwith %}
+
         <div class="profile-header">
             <div>
                 <h1 class="profile-title">Your account</h1>
                 <p class="profile-subtitle">Account details and your all-time spending snapshot</p>
             </div>
-            <a href="{{ url_for('analytics') }}" class="btn-primary">View analytics</a>
+            <div class="profile-header-actions">
+                <a href="{{ url_for('add_expense') }}" class="btn-primary">Add expense</a>
+                <a href="{{ url_for('analytics') }}" class="btn-primary">View analytics</a>
+            </div>
         </div>
 
         {# Step 06: date filter start #}
