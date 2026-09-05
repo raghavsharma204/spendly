@@ -138,6 +138,51 @@ def create_expense(user_id, amount, category, date, description):
         conn.close()
 
 
+def get_expense_by_id(expense_id, user_id):
+    """Fetch a single expense scoped to its owner.
+
+    Returns the row, or None if no expense with that id belongs to that user.
+    Scoping by user_id in the SQL *is* the ownership check — callers must pass
+    the session's user id, never a client-supplied one.
+    """
+    conn = get_db()
+    try:
+        return conn.execute(
+            """
+            SELECT id, user_id, amount, category, date, description
+            FROM expenses
+            WHERE id = ? AND user_id = ?
+            """,
+            (expense_id, user_id),
+        ).fetchone()
+    finally:
+        conn.close()
+
+
+def update_expense(expense_id, user_id, amount, category, date, description):
+    """Update one expense's editable fields, scoped to its owner.
+
+    Returns cursor.rowcount (1 on success, 0 if no such row for that user).
+    `description` may be None (stored as SQL NULL). Callers must validate
+    amount / category / date before calling — this helper only writes, and
+    never touches user_id or created_at.
+    """
+    conn = get_db()
+    try:
+        cursor = conn.execute(
+            """
+            UPDATE expenses
+            SET amount = ?, category = ?, date = ?, description = ?
+            WHERE id = ? AND user_id = ?
+            """,
+            (amount, category, date, description, expense_id, user_id),
+        )
+        conn.commit()
+        return cursor.rowcount
+    finally:
+        conn.close()
+
+
 def authenticate_user(email, password):
     """Verify email/password against the users table. Returns the user row on success, None otherwise."""
     email = email.strip().lower()

@@ -2,7 +2,7 @@ import math
 import os
 from datetime import date, datetime
 
-from flask import Flask, flash, redirect, render_template, request, session, url_for
+from flask import Flask, abort, flash, redirect, render_template, request, session, url_for
 
 from database.db import (
     CATEGORIES,
@@ -11,11 +11,13 @@ from database.db import (
     create_user,
     get_category_breakdown,
     get_db,
+    get_expense_by_id,
     get_recent_transactions,
     get_summary_stats,
     get_user_by_id,
     init_db,
     seed_db,
+    update_expense,
 )
 
 app = Flask(__name__)
@@ -59,6 +61,50 @@ def _parse_iso_date(value):
         return datetime.strptime(value, ISO_DATE)
     except ValueError:
         return None
+
+
+def _parse_expense_form(form):
+    """Validate the shared add/edit expense form fields.
+
+    Returns (raw, fields, error). `raw` is always a dict of the four stripped
+    submitted strings (`amount`, `category`, `date`, `description`) for sticky
+    re-rendering. On success `error` is None and `fields` is a dict with the
+    cleaned `amount` (float, 2 decimals), `category`, `date` (ISO string) and
+    `description` (str or None). On failure `fields` is None and `error` is a
+    single message string. Does no rendering and no DB work — parsing only.
+    """
+    raw = {
+        "amount": form.get("amount", "").strip(),
+        "category": form.get("category", "").strip(),
+        "date": form.get("date", "").strip(),
+        "description": form.get("description", "").strip(),
+    }
+
+    try:
+        amount = round(float(raw["amount"]), 2)
+    except ValueError:
+        return raw, None, "Enter a valid amount."
+    if not math.isfinite(amount) or amount <= 0:
+        return raw, None, "Amount must be greater than zero."
+    if amount >= MAX_EXPENSE_AMOUNT:
+        return raw, None, f"Amount must be less than ₹{MAX_EXPENSE_AMOUNT:,}."
+
+    if raw["category"] not in CATEGORIES:
+        return raw, None, "Choose a valid category."
+
+    expense_date = _parse_iso_date(raw["date"])
+    if expense_date is None:
+        return raw, None, "Enter a valid date."
+
+    if len(raw["description"]) > MAX_DESCRIPTION_LEN:
+        return raw, None, f"Description must be {MAX_DESCRIPTION_LEN} characters or fewer."
+
+    return raw, {
+        "amount": amount,
+        "category": raw["category"],
+        "date": expense_date.strftime(ISO_DATE),
+        "description": raw["description"] or None,
+    }, None
 
 
 def _format_filter_label(start, end):
@@ -221,58 +267,78 @@ def add_expense():
             max_description_len=MAX_DESCRIPTION_LEN,
         )
 
-    amount_raw = request.form.get("amount", "").strip()
-    category = request.form.get("category", "").strip()
-    date_raw = request.form.get("date", "").strip()
-    description = request.form.get("description", "").strip()
-
-    def _fail(msg):
+    raw, fields, error = _parse_expense_form(request.form)
+    if error:
         return render_template(
             "add_expense.html",
             categories=CATEGORIES,
             today=today,
             max_description_len=MAX_DESCRIPTION_LEN,
-            error=msg,
-            amount=amount_raw,
-            category=category,
-            date=date_raw,
-            description=description,
+            error=error,
+            amount=raw["amount"],
+            category=raw["category"],
+            date=raw["date"],
+            description=raw["description"],
         )
 
-    try:
-        amount = round(float(amount_raw), 2)
-    except ValueError:
-        return _fail("Enter a valid amount.")
-    if not math.isfinite(amount) or amount <= 0:
-        return _fail("Amount must be greater than zero.")
-    if amount >= MAX_EXPENSE_AMOUNT:
-        return _fail(f"Amount must be less than ₹{MAX_EXPENSE_AMOUNT:,}.")
-
-    if category not in CATEGORIES:
-        return _fail("Choose a valid category.")
-
-    expense_date = _parse_iso_date(date_raw)
-    if expense_date is None:
-        return _fail("Enter a valid date.")
-
-    if len(description) > MAX_DESCRIPTION_LEN:
-        return _fail(f"Description must be {MAX_DESCRIPTION_LEN} characters or fewer.")
-
     create_expense(
-        user_id, amount, category, expense_date.strftime(ISO_DATE), description or None
+        user_id, fields["amount"], fields["category"], fields["date"], fields["description"]
     )
     flash("Expense added.")
+    return redirect(url_for("profile"))
+
+
+@app.route("/expenses/<int:id>/edit", methods=["GET", "POST"])
+def edit_expense(id):
+    user_id = session.get("user_id")
+    if not user_id:
+        return redirect(url_for("login"))
+
+    user = get_user_by_id(user_id)
+    if user is None:
+        session.clear()
+        return redirect(url_for("login"))
+
+    expense = get_expense_by_id(id, user_id)
+    if expense is None:
+        abort(404)
+
+    if request.method == "GET":
+        return render_template(
+            "edit_expense.html",
+            expense=expense,
+            categories=CATEGORIES,
+            max_description_len=MAX_DESCRIPTION_LEN,
+            amount=None,
+            category=None,
+            date=None,
+            description=None,
+        )
+
+    raw, fields, error = _parse_expense_form(request.form)
+    if error:
+        return render_template(
+            "edit_expense.html",
+            expense=expense,
+            categories=CATEGORIES,
+            max_description_len=MAX_DESCRIPTION_LEN,
+            error=error,
+            amount=raw["amount"],
+            category=raw["category"],
+            date=raw["date"],
+            description=raw["description"],
+        )
+
+    update_expense(
+        id, user_id, fields["amount"], fields["category"], fields["date"], fields["description"]
+    )
+    flash("Expense updated.")
     return redirect(url_for("profile"))
 
 
 # ------------------------------------------------------------------ #
 # Placeholder routes — students will implement these                  #
 # ------------------------------------------------------------------ #
-
-@app.route("/expenses/<int:id>/edit")
-def edit_expense(id):
-    return "Edit expense — coming in Step 8"
-
 
 @app.route("/expenses/<int:id>/delete")
 def delete_expense(id):

@@ -72,7 +72,7 @@ There is no test suite, lint config, or build step yet — `pytest` and `pytest-
 |'GET /logout' | Implemented — clears session, redirects to /login |
 |'GET /profile'	| Implemented — renders profile.html (stats, category breakdown, recent transactions); optional ?start / ?end (YYYY-MM-DD) query params scope all three sections to a date range |
 |'GET /expenses/add'	| Implemented — GET renders add_expense.html; POST validates and inserts an expense for the logged-in user, then redirects to /profile |
-|'GET /expenses/<id>/edit' |	Stub — Step 8|
+|'GET /expenses/<id>/edit' |	Implemented — GET renders edit_expense.html pre-filled for the owner; POST re-validates and updates the expense, then redirects to /profile; 404s if the id is missing or owned by another user |
 |'GET /expenses/<id>/delete'	| Stub — Step 9|
 
 **Do not implement a stub route unless the active task explicitly targets that step.**
