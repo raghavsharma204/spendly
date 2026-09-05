@@ -1254,6 +1254,49 @@ select.form-input {
 }
 
 /* ------------------------------------------------------------------ */
+/* Utilities                                                           */
+/* ------------------------------------------------------------------ */
+
+/* Visually-hidden label for screen readers (e.g. the profile transactions
+   "Actions" column header). */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* ------------------------------------------------------------------ */
+/* Profile transaction actions (Step 08)                              */
+/* ------------------------------------------------------------------ */
+
+/* Tight trailing action column in the recent-transactions table. Selector is
+   scoped to the table so `padding-left` beats `.profile-txn-table td`. */
+.profile-txn-table th.profile-txn-actions,
+.profile-txn-table td.profile-txn-actions {
+    width: 1%;
+    padding-left: 1.25rem;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.profile-txn-edit {
+    font-weight: 500;
+    color: var(--accent);
+    text-decoration: none;
+}
+
+.profile-txn-edit:hover {
+    color: var(--ink);
+    text-decoration: underline;
+}
+
+/* ------------------------------------------------------------------ */
 /* Responsive                                                          */
 /* ------------------------------------------------------------------ */
 

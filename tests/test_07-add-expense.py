@@ -370,16 +370,10 @@ def test_sticky_values_on_validation_rerender(auth_client):
 
 
 # --------------------------------------------------------------------------- #
-# 9. Still-stubbed edit / delete routes — DoD #12                             #
+# 9. Still-stubbed delete route — DoD #12                                     #
 # --------------------------------------------------------------------------- #
-
-def test_edit_expense_stub_unchanged(client):
-    """DoD #12: GET /expenses/<id>/edit still returns its Step 8 placeholder."""
-    resp = client.get("/expenses/1/edit")
-
-    assert resp.status_code == 200
-    assert resp.get_data(as_text=True) == "Edit expense — coming in Step 8"
-
+# (The edit route became real in Step 08; its coverage lives in
+# tests/test_08-edit-expense.py.)
 
 def test_delete_expense_stub_unchanged(client):
     """DoD #12: GET /expenses/<id>/delete still returns its Step 9 placeholder."""
